@@ -1,0 +1,65 @@
+@baseUrl = http://localhost:3000
+
+### 1. Get all todos
+GET {{baseUrl}}/todos
+
+### 2. Create a new todo (Happy Path -> Expect 201 Created)
+# @name createTodo
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "Write API documentation",
+  "description": "OpenAPI + README examples",
+  "state": "todo"
+}
+
+### 3. Get single todo by ID
+GET {{baseUrl}}/todos/{{createTodo.response.body.id}}
+
+### 4. Filter todos by state (?state=todo)
+GET {{baseUrl}}/todos?state=todo
+
+### 5. Update todo state (PUT -> Expect 200 OK)
+PUT {{baseUrl}}/todos/{{createTodo.response.body.id}}
+Content-Type: application/json
+
+{
+  "state": "doing"
+}
+
+### ==========================
+### ERROR TEST CASES (Validation)
+### ==========================
+
+### 6. Error: POST missing required title (Expect 400 Bad Request)
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "description": "Missing title test",
+  "state": "todo"
+}
+
+### 7. Error: POST with invalid state value (Expect 400 Bad Request)
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "Invalid state test",
+  "state": "invalid-state-value"
+}
+
+### 8. Error: GET non-existent ID (Expect 404 Not Found)
+GET {{baseUrl}}/todos/non-existent-id-12345
+
+### 9. Error: PUT update with invalid state (Expect 400 Bad Request)
+PUT {{baseUrl}}/todos/{{createTodo.response.body.id}}
+Content-Type: application/json
+
+{
+  "state": "completed"
+}
+
+### 10. Delete todo item (Expect 200 OK)
+DELETE {{baseUrl}}/todos/{{createTodo.response.body.id}}
