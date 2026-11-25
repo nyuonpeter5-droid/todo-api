@@ -1,11 +1,35 @@
 @baseUrl = http://localhost:3000
 
-### 1. Get all todos
-GET {{baseUrl}}/todos
+### ==========================
+### 0. AUTHENTICATION
+### ==========================
 
-### 2. Create a new todo (Happy Path -> Expect 201 Created)
+### Login to get Access Token and set Refresh Cookie
+# @name login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "password123"
+}
+
+### Store the access token dynamically from the login response
+@accessToken = {{login.response.body.accessToken}}
+
+
+### ==========================
+### 1. TODO CRUD (Happy Paths)
+### ==========================
+
+### Get all todos
+GET {{baseUrl}}/todos
+Authorization: Bearer {{accessToken}}
+
+### Create a new todo item (Expect 201 Created)
 # @name createTodo
 POST {{baseUrl}}/todos
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
@@ -14,26 +38,35 @@ Content-Type: application/json
   "state": "todo"
 }
 
-### 3. Get single todo by ID
+### Get single todo by ID
 GET {{baseUrl}}/todos/{{createTodo.response.body.id}}
+Authorization: Bearer {{accessToken}}
 
-### 4. Filter todos by state (?state=todo)
+### Filter todos by state (?state=todo)
 GET {{baseUrl}}/todos?state=todo
+Authorization: Bearer {{accessToken}}
 
-### 5. Update todo state (PUT -> Expect 200 OK)
+### Update todo state (Expect 200 OK)
 PUT {{baseUrl}}/todos/{{createTodo.response.body.id}}
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
   "state": "doing"
 }
 
+### Delete todo item (Expect 200 OK)
+DELETE {{baseUrl}}/todos/{{createTodo.response.body.id}}
+Authorization: Bearer {{accessToken}}
+
+
 ### ==========================
-### ERROR TEST CASES (Validation)
+### 2. ERROR & VALIDATION TESTS
 ### ==========================
 
-### 6. Error: POST missing required title (Expect 400 Bad Request)
+### Error: POST missing required title (Expect 400 Bad Request)
 POST {{baseUrl}}/todos
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
@@ -41,8 +74,9 @@ Content-Type: application/json
   "state": "todo"
 }
 
-### 7. Error: POST with invalid state value (Expect 400 Bad Request)
+### Error: POST with invalid state value (Expect 400 Bad Request)
 POST {{baseUrl}}/todos
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
@@ -50,16 +84,15 @@ Content-Type: application/json
   "state": "invalid-state-value"
 }
 
-### 8. Error: GET non-existent ID (Expect 404 Not Found)
+### Error: GET non-existent ID (Expect 404 Not Found)
 GET {{baseUrl}}/todos/non-existent-id-12345
+Authorization: Bearer {{accessToken}}
 
-### 9. Error: PUT update with invalid state (Expect 400 Bad Request)
+### Error: PUT update with invalid state (Expect 400 Bad Request)
 PUT {{baseUrl}}/todos/{{createTodo.response.body.id}}
+Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
 {
   "state": "completed"
 }
-
-### 10. Delete todo item (Expect 200 OK)
-DELETE {{baseUrl}}/todos/{{createTodo.response.body.id}}
